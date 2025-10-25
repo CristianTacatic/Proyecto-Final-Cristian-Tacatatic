@@ -1,254 +1,275 @@
-#gestor_notas
-
 def mostrar_menu():
     print("\n--- GESTOR DE NOTAS - MENÚ ---")
-    print("1) Registrar estudiantes")
-    print("2) Mostrar estudiantes")
-    print("3) Buscar (lineal)")
-    print("4) Buscar (binaria)")
-    print("5) Mostrar promedio")
+    print("1) Registrar estudiantes y notas")
+    print("2) Mostrar todos los estudiantes")
+    print("3) Buscar estudiante (lineal)")
+    print("4) Buscar estudiante (binaria)")
+    print("5) Mostrar promedios por curso")
     print("6) Ver pila (historial)")
     print("7) Ver cola (revisión)")
-    print("8) Ordenar notas (burbuja / inserción)")
-    print("9) Guardar ejemplo de pseudocódigo (texto)")
+    print("8) Ordenar promedios (burbuja / inserción)")
+    print("9) Guardar pseudocódigo")
     print("0) Salir")
 
 def pedir_entero_mensaje(mensaje):
-    # función auxiliar simple para pedir un entero
     while True:
         try:
-            v = int(input(mensaje))
-            return v
+            numero = int(input(mensaje))
+            return numero
         except:
             print("Por favor, ingrese un número entero válido.")
 
-def pedir_float_validado(mensaje, minimo=0.0, maximo=100.0):
-    # pedir un número decimal
+def pedir_float_validado(mensaje, minimo=0, maximo=100):
     while True:
         try:
-            v = float(input(mensaje))
-            if v < minimo or v > maximo:
-                print(f"Valor fuera de rango. Debe estar entre {minimo} y {maximo}.")
+            numero = float(input(mensaje))
+            if numero < minimo or numero > maximo:
+                print("La nota debe estar entre 0 y 100.")
             else:
-                return v
+                return numero
         except:
-            print("Entrada no válida. Escriba un número (ej: 75.5).")
+            print("Ingrese un número válido.")
 
 
-# OPERACION PRINCIPAL
-def registrar_estudiantes():
-    nombres = []
-    notas = []
-    n = pedir_entero_mensaje("¿Cuántos estudiantes desea registrar? ")
-    if n <= 0:
-        print("Debe registrar al menos 1 estudiante.")
-        return nombres, notas
+# REGISTRO DE ESTUDIANTES
 
-    for i in range(n):
-        print(f"\nEstudiante {i+1}:")
-        nombre = input("  Nombre: ").strip()
+def registrar_estudiantes(lista_estudiantes):
+    cantidad = pedir_entero_mensaje("¿Cuántos estudiantes desea registrar? ")
+
+    if cantidad <= 0:
+        print("Debe ser un número mayor que 0.")
+        return 0
+
+    for i in range(cantidad):
+        print(f"\nEstudiante {i + 1}:")
+        nombre = input("Nombre: ").strip()
         if nombre == "":
-            nombre = f"Alumno{i+1}"   # evitar nombre vacío
-            print("  Nombre vacío, se asignó:", nombre)
-        nota = pedir_float_validado("  Nota (0-100): ", 0.0, 100.0)
-        nombres.append(nombre)
-        notas.append(nota)
+            nombre = f"Alumno{i + 1}"
+            print("Nombre vacío, se asignó:", nombre)
 
-    print("\nRegistros guardados correctamente.")
-    return nombres, notas
+        # Aca se solicitan las notas de los 3 cursos
+        mate = pedir_float_validado("Nota de Matemática (0-100): ")
+        lengua = pedir_float_validado("Nota de Lenguaje (0-100): ")
+        compu = pedir_float_validado("Nota de Computación (0-100): ")
 
-def mostrar_estudiantes(nombres, notas):
-    print("\n--- LISTA DE ESTUDIANTES ---")
-    if len(nombres) == 0:
+        estudiante = {
+            "nombre": nombre,
+            "matematica": mate,
+            "lenguaje": lengua,
+            "computacion": compu
+        }
+
+        lista_estudiantes.append(estudiante)
+
+    print("\nEstudiantes registrados correctamente.")
+    return cantidad
+
+
+# MOSTRAR ESTUDIANTES
+
+def mostrar_estudiantes(lista_estudiantes):
+    if len(lista_estudiantes) == 0:
         print("No hay estudiantes registrados.")
         return
-    for i in range(len(nombres)):
-        estado = "Aprobado" if notas[i] >= 60 else "Reprobado"
-        print(f"{i+1}) {nombres[i]} - {notas[i]} - {estado}")
 
-def busqueda_lineal(nombres, buscar):
+    print("\n--- LISTA DE ESTUDIANTES ---")
+    for i, e in enumerate(lista_estudiantes):
+        promedio = (e["matematica"] + e["lenguaje"] + e["computacion"]) / 3
+        estado = "Aprobado" if promedio >= 60 else "Reprobado"
+
+        print(f"\n{i + 1}) {e['nombre']}")
+        print(f"   Matemática: {e['matematica']}")
+        print(f"   Lenguaje: {e['lenguaje']}")
+        print(f"   Computación: {e['computacion']}")
+        print(f"   Promedio: {round(promedio, 2)} - {estado}")
+
+
+# BÚSQUEDAS
+
+def busqueda_lineal(lista_estudiantes, buscar):
     pasos = 0
-    for i in range(len(nombres)):
+    for i in range(len(lista_estudiantes)):
         pasos += 1
-        if nombres[i].lower() == buscar.lower():
-            print(f"{buscar} encontrado en posición {i} (pasos: {pasos})")
-            return i, pasos
+        if lista_estudiantes[i]["nombre"].lower() == buscar.lower():
+            print(f"{buscar} encontrado en la posición {i} (pasos: {pasos})")
+            return
     print(f"{buscar} no encontrado (pasos: {pasos})")
-    return -1, pasos
 
-def busqueda_binaria(nombres, buscar):
-    # la búsqueda binaria necesita lista ordenada
-    if len(nombres) == 0:
-        print("Lista vacía.")
-        return -1, 0
-    nombres_orden = sorted(nombres, key=lambda s: s.lower())
+def busqueda_binaria(lista_estudiantes, buscar):
+    if len(lista_estudiantes) == 0:
+        print("No hay estudiantes registrados.")
+        return
+    
+    # ordenar lista por nombre
+    lista_ordenada = sorted(lista_estudiantes, key=lambda x: x["nombre"].lower())
     inicio = 0
-    fin = len(nombres_orden) - 1
+    fin = len(lista_ordenada) - 1
     pasos = 0
+
     while inicio <= fin:
         pasos += 1
         medio = (inicio + fin) // 2
-        medio_val = nombres_orden[medio].lower()
-        if medio_val == buscar.lower():
-            print(f"{buscar} encontrado en lista ordenada posición {medio} (pasos: {pasos})")
-            return medio, pasos
-        elif buscar.lower() < medio_val:
+        nombre_medio = lista_ordenada[medio]["nombre"].lower()
+
+        if nombre_medio == buscar.lower():
+            print(f"{buscar} encontrado (pasos: {pasos})")
+            return
+        elif buscar.lower() < nombre_medio:
             fin = medio - 1
         else:
             inicio = medio + 1
-    print(f"{buscar} no encontrado en lista ordenada (pasos: {pasos})")
-    return -1, pasos
 
-def calcular_promedio(notas):
-    if len(notas) == 0:
-        print("No hay notas registradas.")
-        return None
-    total = 0
-    for n in notas:
-        total = total + n
-    prom = total / len(notas)
-    print("\nPromedio del grupo:", round(prom, 2))
-    return prom
+    print(f"{buscar} no encontrado (pasos: {pasos})")
 
 
-# PILA y COLA
+
+# PROMEDIOS
+
+def mostrar_promedios(lista_estudiantes):
+    if len(lista_estudiantes) == 0:
+        print("No hay estudiantes registrados.")
+        return
+
+    total_mate = 0
+    total_lengua = 0
+    total_compu = 0
+
+    for e in lista_estudiantes:
+        total_mate += e["matematica"]
+        total_lengua += e["lenguaje"]
+        total_compu += e["computacion"]
+
+    n = len(lista_estudiantes)
+
+    print("\n--- PROMEDIOS POR CURSO ---")
+    print("Matemática:", round(total_mate / n, 2))
+    print("Lenguaje:", round(total_lengua / n, 2))
+    print("Computación:", round(total_compu / n, 2))
+
+    promedio_general = (total_mate + total_lengua + total_compu) / (n * 3)
+    print("Promedio general del grupo:", round(promedio_general, 2))
+
+
+# PILA Y COLA
+
 def ver_pila(historial):
-    print("\n--- PILA (Historial de acciones) ---")
+    print("\n--- PILA (Historial) ---")
     if len(historial) == 0:
         print("Historial vacío.")
         return
-    print("Historial (arriba = última):", historial)
-    ultima = historial.pop()   # quita la última acción
-    print("Se sacó:", ultima)
+    print("Historial actual:", historial)
+    ultima = historial.pop()
+    print("Se quitó la última acción:", ultima)
     print("Historial ahora:", historial)
 
-def ver_cola(nombres):
+def ver_cola(lista_estudiantes):
     print("\n--- COLA (Revisión de estudiantes) ---")
-    if len(nombres) == 0:
-        print("No hay estudiantes en la cola.")
+    if len(lista_estudiantes) == 0:
+        print("No hay estudiantes registrados.")
         return
-    cola = nombres.copy()
+    cola = [e["nombre"] for e in lista_estudiantes]
     print("Cola inicial:", cola)
     while len(cola) > 0:
-        persona = cola.pop(0)   # saca el primero
-        print("Atendiendo a:", persona, " | Cola restante:", cola)
+        actual = cola.pop(0)
+        print("Atendiendo a:", actual, "| Cola restante:", cola)
 
-# ORDENAMIENTOS (burbuja e inserción)
+
+
+# ORDENAMIENTOS
+
 def ordenamiento_burbuja(lista):
-    a = lista.copy()
-    n = len(a)
-    for i in range(n-1):
-        for j in range(n-1-i):
-            if a[j] > a[j+1]:
-                a[j], a[j+1] = a[j+1], a[j]
-    return a
+    lista_copia = lista.copy()
+    n = len(lista_copia)
+    for i in range(n - 1):
+        for j in range(n - 1 - i):
+            if lista_copia[j] > lista_copia[j + 1]:
+                lista_copia[j], lista_copia[j + 1] = lista_copia[j + 1], lista_copia[j]
+    return lista_copia
 
 def ordenamiento_insercion(lista):
-    a = lista.copy()
-    for i in range(1, len(a)):
-        clave = a[i]
+    lista_copia = lista.copy()
+    for i in range(1, len(lista_copia)):
+        clave = lista_copia[i]
         j = i - 1
-        while j >= 0 and a[j] > clave:
-            a[j+1] = a[j]
-            j = j - 1
-        a[j+1] = clave
-    return a
+        while j >= 0 and lista_copia[j] > clave:
+            lista_copia[j + 1] = lista_copia[j]
+            j -= 1
+        lista_copia[j + 1] = clave
+    return lista_copia
 
 
-# GUARDAR PSEUDOCODIGO 
+
+# GUARDAR PSEUDOCÓDIGO
+
 def guardar_pseudocodigo():
     texto = (
         "PSEUDOCODIGO GESTOR DE NOTAS\n"
         "1. Mostrar menu\n"
-        "2. Si opcion = 1 -> pedir estudiantes y notas, guardar en listas\n"
-        "3. Si opcion = 2 -> mostrar estudiantes\n"
-        "4. Si opcion = 3 -> pedir nombre, hacer busqueda lineal\n"
-        "5. Si opcion = 4 -> pedir nombre, hacer busqueda binaria (usar lista ordenada)\n"
-        "6. Si opcion = 5 -> calcular promedio\n"
-        "7. Si opcion = 6 -> mostrar pila (pop)\n"
-        "8. Si opcion = 7 -> mostrar cola (pop(0))\n"
-        "9. Si opcion = 8 -> mostrar ordenamientos burbuja e insercion\n"
+        "2. Registrar estudiantes con 3 cursos\n"
+        "3. Mostrar estudiantes\n"
+        "4. Buscar (lineal y binaria)\n"
+        "5. Mostrar promedios\n"
+        "6. Mostrar pila y cola\n"
+        "7. Ordenar promedios (burbuja e inserción)\n"
         "0. Salir\n"
     )
-    try:
-        with open("pseudocodigo.txt", "w", encoding="utf-8") as f:
-            f.write(texto)
-        print("pseudocodigo.txt guardado en la carpeta actual.")
-    except:
-        print("Error al guardar pseudocodigo (quizá permisos de carpeta).")
+    with open("pseudocodigo.txt", "w", encoding="utf-8") as f:
+        f.write(texto)
+    print("Archivo pseudocodigo.txt guardado correctamente.")
 
 
-# PROGRAMA PRINCIPAL (menú)
+# PROGRAMA PRINCIPAL
+
 def main():
-    nombres = []
-    notas = []
+    estudiantes = []
     historial = []
 
     print("Bienvenido al Gestor de Notas (versión principiante).")
+
     while True:
         mostrar_menu()
-        opcion = input("Seleccione una opción: ").strip()
+        opcion = input("Seleccione una opción: ")
+
         if opcion == "1":
-            n, m = registrar_estudiantes_simple(nombres, notas)
-            # la función que registra añade a las listas existentes, retorna contadores simples
-            historial.append(f"Se registraron {m} estudiantes")
+            cantidad = registrar_estudiantes(estudiantes)
+            historial.append(f"Se registraron {cantidad} estudiantes")
         elif opcion == "2":
-            mostrar_estudiantes(nombres, notas)
+            mostrar_estudiantes(estudiantes)
             historial.append("Se mostraron estudiantes")
         elif opcion == "3":
-            if len(nombres) == 0:
-                print("No hay estudiantes registrados para buscar.")
-            else:
-                buscar = input("Nombre a buscar (lineal): ")
-                busqueda_lineal(nombres, buscar)
-                historial.append("Búsqueda lineal")
+            nombre = input("Nombre a buscar (lineal): ")
+            busqueda_lineal(estudiantes, nombre)
+            historial.append("Búsqueda lineal")
         elif opcion == "4":
-            if len(nombres) == 0:
-                print("No hay estudiantes registrados para buscar.")
-            else:
-                buscar = input("Nombre a buscar (binaria): ")
-                busqueda_binaria(nombres, buscar)
-                historial.append("Búsqueda binaria")
+            nombre = input("Nombre a buscar (binaria): ")
+            busqueda_binaria(estudiantes, nombre)
+            historial.append("Búsqueda binaria")
         elif opcion == "5":
-            calcular_promedio(notas)
-            historial.append("Calculo promedio")
+            mostrar_promedios(estudiantes)
+            historial.append("Se calcularon promedios")
         elif opcion == "6":
             ver_pila(historial)
         elif opcion == "7":
-            ver_cola(nombres)
+            ver_cola(estudiantes)
         elif opcion == "8":
-            print("\nNotas originales:", notas)
-            print("Burbuja:", ordenamiento_burbuja(notas))
-            print("Inserción:", ordenamiento_insercion(notas))
-            historial.append("Ordenamientos mostrados")
+            promedios = []
+            for e in estudiantes:
+                prom = (e["matematica"] + e["lenguaje"] + e["computacion"]) / 3
+                promedios.append(prom)
+            print("\nPromedios originales:", promedios)
+            print("Burbuja:", ordenamiento_burbuja(promedios))
+            print("Inserción:", ordenamiento_insercion(promedios))
+            historial.append("Se usaron ordenamientos")
         elif opcion == "9":
             guardar_pseudocodigo()
-            historial.append("Se guardó pseudocodigo.txt")
+            historial.append("Se guardó pseudocódigo")
         elif opcion == "0":
-            print("Saliendo... ¡gracias!")
+            print("Saliendo del programa... ¡Gracias!")
             break
         else:
-            print("Opción no válida. Intente otra vez.")
+            print("Opción no válida, intente de nuevo.")
 
-# Función auxiliar que permite añadir nuevos registros a las listas existentes
-def registrar_estudiantes_simple(nombres, notas):
-    cantidad = pedir_entero_mensaje("¿Cuántos estudiantes desea agregar ahora? ")
-    agregados = 0
-    if cantidad <= 0:
-        print("Debe ser un número mayor que 0.")
-        return cantidad, agregados
-    for i in range(cantidad):
-        nombre = input(f"Nombre del estudiante {len(nombres)+1}: ").strip()
-        if nombre == "":
-            nombre = f"Alumno{len(nombres)+1}"
-            print("Nombre vacío, se asignó:", nombre)
-        nota = pedir_float_validado("Nota (0-100): ", 0.0, 100.0)
-        nombres.append(nombre)
-        notas.append(nota)
-        agregados += 1
-    print(f"{agregados} estudiantes agregados.")
-    return cantidad, agregados
 
-# Ejecutar si se llama directamente
+# EJECUTAR
 if __name__ == "__main__":
     main()
